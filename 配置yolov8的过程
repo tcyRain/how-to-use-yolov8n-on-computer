@@ -1,0 +1,30 @@
+配置yolov8的过程
+
+
+先看电脑基础要求
+1.系统：Windows10/11 都行
+2.推荐有 N 卡独显（NVIDIA），有 GPU 训练飞快；没有也能用 CPU 跑，就是慢一点
+3.必备软件：Python + 代码编辑器
+配制基本环境
+第一步：安装 Python官网下载 Python 3.10 版本 安装时一定要勾选：Add Python to PATH 安装完 按下 Win+R 输入 cmd 打开黑窗口
+输入  python --version  去验证
+若输出版本号则成功
+第二步：安装 YOLOv8 核心依赖库
+cmd 依次输入下面命令：
+pip install ultralytics
+pip install opencv-python 
+pip install numpy matplotlib pillow
+第三步：验证环境是否装好（测试 YOLOv8s）
+新建一个文件夹，新建文本文件，改名为 test_yolo.py复制下面代码：
+from ultralytics import YOLO 
+# 自动下载 yolov8s 官方权重
+ model = YOLO("yolov8s.pt") 
+# 调用电脑摄像头实时检测 
+results = model(source=0, show=True)
+能弹出摄像头画面 = YOLOv8s 电脑配置成功！
+
+第四步：如何切换使用 YOLOv8n / YOLOv8s / YOLOv8m
+只改这一行就行：
+model = YOLO("yolov8n.pt")  # 最快，嵌入式用
+model = YOLO("yolov8s.pt")  # 均衡，电脑/智能车用
+model = YOLO("yolov8m.pt")  # 精度更高，速度稍慢
