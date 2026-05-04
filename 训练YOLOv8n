@@ -1,0 +1,115 @@
+第一步：准备环境
+你电脑已经装过 YOLOv8，直接确认：打开 CMD 输入：
+pip install ultralytics opencv-python
+
+第二步：下载【疲劳检测专用数据集】（最重要）
+
+第三步：把数据集放好（文件夹结构必须这样）
+在你的代码文件夹里，新建文件夹结构：
+plaintext
+  datasets/
+     fatigue/
+        train/
+           images/   → 放训练图片
+           labels/   → 放训练txt标签
+        val/
+           images/   → 放验证图片
+           labels/   → 放验证txt标签
+这一步必须对，否则训练报错。
+🔥 第四步：新建 fatigue.yaml 配置文件
+在代码根目录新建文本文件，改名 fatigue.yaml内容复制下面（直接用）：
+
+  path: ./datasets/fatigue
+  train: train/images
+  val: val/images
+  
+  nc: 4
+  names:
+    0: face
+    1: eye_open
+    2: eye_closed
+    3: yawn
+第五步：开始训练 YOLOv8n
+新建 train.py，复制下面代码：
+
+  from ultralytics import YOLO
+  
+  # 加载轻量 yolov8n 预训练权重
+  model = YOLO("yolov8n.pt")
+  
+  if __name__ == "__main__":
+      model.train(
+          data="fatigue.yaml",
+          epochs=10,        # 训练轮数
+          imgsz=320,        # 关键！训练就用320，适配后续N6部署
+          batch=16,         # 有显卡可以开大一点
+          device='cpu',         # 0 = 使用GPU
+          conf=0.25,
+          iou=0.45,
+          workers=4,
+          save=True,
+          verbose=True
+      )
+运行它 → 自动开始训练！
+训练完会生成：
+plaintext
+runs/detect/fatigue_model/weights/best.pt
+这就是你的疲劳检测专用模型。
+第六步：检测成果
+ D:\datasets\runs\detect\train\result.png
+观察数据
+metrics/precision(B)、metrics/recall(B)、metrics/mAP50(B) 这些关键指标
+大于0.6是能用大于0.8是比较优秀
+在PC端检测
+代码如下：
+  # ====================== 只需要改这里！======================
+  # 把这里换成你自己训练的模型绝对路径
+  MODEL_PATH = r"D:\yolov8n_fatigue\runs\detect\train\weights\best.pt"
+  # ==========================================================
+  
+  from ultralytics import YOLO
+  import cv2
+  
+  # 加载你自己训练的模型
+  model = YOLO(MODEL_PATH).to('cpu')
+  
+  # 打开摄像头（0 = 默认摄像头）
+  cap = cv2.VideoCapture(0)
+  
+  # 判断摄像头是否成功打开
+  if not cap.isOpened():
+      print("摄像头打开失败！")
+      exit()
+  
+  print(" 摄像头已启动，实时检测中... 按 Q 退出")
+  
+  # 循环读取每一帧
+  while True:
+      ret, frame = cap.read()
+      if not ret:
+          break
+  
+      # 模型推理
+      results = model(frame, stream=True)
+  
+      # 绘制检测框
+      for r in results:
+          frame = r.plot()
+  
+      # 显示画面
+      cv2.imshow("自定义模型 - 实时检测", frame)
+  
+      # 按 Q 退出
+      if cv2.waitKey(1) & 0xFF == ord('q'):
+          break
+  
+  # 释放资源
+  cap.release()
+  cv2.destroyAllWindows()
+
+这些所有代码文件都要直接放在datasets文件夹直属
+在虚拟python环境下跳转到datasets文件夹下
+运行 python 文件名.py
+包括训练模型
+
+
