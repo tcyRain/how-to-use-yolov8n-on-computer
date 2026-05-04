@@ -1,0 +1,10 @@
+path: D:/yolov8n_fatigue/fatigue
+train: images/train
+val: images/val
+
+nc: 4
+names:
+  0: closed_eye
+  1: open_eye  
+  2: yawn
+  3: head_down
